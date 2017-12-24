@@ -8,13 +8,24 @@ try:
 except ImportError:
     from urllib import urlencode
 
+CLASS_MAPPING_TABLE = {
+    'payouts_item': 'paypalrestsdk.payments.PayoutItem',
+    'payouts': 'paypalrestsdk.payments.Payout',
+    'plan': 'paypalrestsdk.payments.BillingPlan',
+    'agreement': 'paypalrestsdk.payments.BillingAgreement',
+    'invoices': 'paypalrestsdk.invoices.Invoice',
+    'dispute': 'paypalrestsdk.resource.Resource',  # not mapped ?
+    'authorization_consent_revoked': 'paypalrestsdk.resource.Resource',  # not mapped ?
+    'merchant-onboarding': 'paypalrestsdk.resource.Resource',  # not mapped ?
+    'partner-consent': 'paypalrestsdk.resource.Resource',  # not mapped ?
+    'vault-credit-card': 'paypalrestsdk.resource.Resource'  # not mapped ?
+}
+
 
 def join_url(url, *paths):
     """
     Joins individual URL strings together, and returns a single string.
-
     Usage::
-
         >>> util.join_url("example.com", "index.html")
         'example.com/index.html'
     """
@@ -26,9 +37,7 @@ def join_url(url, *paths):
 def join_url_params(url, params):
     """Constructs percent-encoded query string from given parms dictionary
      and appends to given url
-
     Usage::
-
         >>> util.join_url_params("example.com/index.html", {"page-id": 2, "Company": "Pay Pal"})
         example.com/index.html?page-id=2&Company=Pay+Pal
     """
@@ -38,9 +47,7 @@ def join_url_params(url, params):
 def merge_dict(data, *override):
     """
     Merges any number of dictionaries together, and returns a single dictionary
-
     Usage::
-
         >>> util.merge_dict({"foo": "bar"}, {1: 2}, {"Pay": "Pal"})
         {1: 2, 'foo': 'bar', 'Pay': 'Pal'}
     """
@@ -59,13 +66,14 @@ def get_member(name):
     """
     Get the paypalrestsdk member class represented by name. Helper
     method for fetching resource sent via webhook event
-
     Usage::
-
     >>> util.get_member('authorization')
     <class 'paypalrestsdk.payments.Authorization'>
     """
     resource_class_dict = dict((k.lower(), ("{0}.{1}".format(v.__module__, k)))
                                for k, v in inspect.getmembers(paypalrestsdk, inspect.isclass))
-    klass = locate(resource_class_dict[name.lower()])
+    try:
+        klass = locate(resource_class_dict[name.lower()])
+    except:
+        klass = locate(CLASS_MAPPING_TABLE[name.lower()])
     return klass
